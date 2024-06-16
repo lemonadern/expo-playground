@@ -8,7 +8,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "fmt:check": "biome format src",
+    "fmt": "biome format --fix src"
   },
   "jest": {
     "preset": "jest-expo"
@@ -38,6 +40,7 @@
     "@types/eslint": "^8.56.10",
     "@types/jest": "^29.5.12",
     "@types/react": "~18.2.45",
+    "biome": "^0.3.3",
     "eslint": "^9.4.0",
     "eslint-config-expo": "^7.0.0",
     "eslint-plugin-jest": "^28.6.0",
