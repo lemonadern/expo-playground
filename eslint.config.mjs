@@ -1,24 +1,112 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import {FlatCompat} from '@eslint/eslintrc';
-import js from '@eslint/js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+import pluginJs from '@eslint/js';
+import pluginJest from 'eslint-plugin-jest';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactHooks from 'eslint-plugin-react-hooks';
+import pluginReactConfig from 'eslint-plugin-react/configs/recommended.js';
+import pluginUnusedImport from 'eslint-plugin-unused-imports';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const compat = new FlatCompat({
-    baseDirectory: __dirname
+  baseDirectory: __dirname,
 });
 
-/** @type {import("eslint").Linter.FlatConfig[]} */
-const config = [
-    {
-        ignores: [
-            "babel.config.js",
-        ]
-    },
-    js.configs.recommended,
-    ...compat.plugins("expo"),
-]
+/** @type {import("eslint").Linter.FlatConfig} */
+const commonConfig = {
+  files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+  plugins: {
+    'unused-imports': pluginUnusedImport,
+  },
+  rules: {
+    'unused-imports/no-unused-imports': 'error',
+  },
+};
 
-export default config;
+/** @type {import("eslint").Linter.FlatConfig} */
+const tslintConfig = {
+  files: ['**/*.ts', '**/*.tsx'],
+  plugins: {
+    '@typescript-eslint': tseslint.plugin,
+  },
+  languageOptions: {
+    parser: tseslint.parser,
+  },
+  rules: {
+    ...tseslint.configs['strictTypeChecked'].rules,
+    'no-undef': 'off',
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+      },
+    ],
+  },
+};
+
+/** @type {import("eslint").Linter.FlatConfig} */
+const reactConfig = {
+  files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+  settings: {
+    react: {
+      version: 'detect',
+    },
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+      typescript: {},
+    },
+  },
+  plugins: {
+    react: pluginReact,
+    'react-hooks': pluginReactHooks,
+  },
+  rules: {
+    ...pluginReactConfig.rules,
+    'react/jsx-uses-react': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    'react/prop-types': 'off',
+  },
+};
+
+/** @type {import("eslint").Linter.FlatConfig} */
+const testConfig = {
+  files: ['**/*.{test,spec}.*', '**/__tests__/**'],
+  plugins: {
+    jest: pluginJest,
+  },
+  languageOptions: {
+    globals: {
+      ...globals.jest,
+    },
+  },
+};
+
+export default [
+  {
+    ignores: [
+      '.expo/',
+      'src/api/', // generated files by openapi2aspida
+      'src/fetcher/openapi-generated.d.ts', // generated file by openapi-typescript
+      '*.config.js',
+    ],
+  },
+  commonConfig,
+  pluginJs.configs.recommended, // eslint:recommended の Flat Config バージョン
+  tslintConfig,
+  reactConfig,
+  testConfig,
+  ...compat.plugins('expo'),
+];
